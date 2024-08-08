@@ -16,9 +16,9 @@ use std::collections::HashMap;
 
 use thiserror::Error;
 
-use crate::crypto::bls::G1Point;
 use crate::crypto::bls::KeyPair;
 use crate::crypto::bls::Signature;
+use crate::crypto::bls::{g1_point_to_ark_point, g1_projective_to_g1_point, G1Point};
 use crate::services::bls_aggregation::BlsAggregationError;
 use crate::utils::*;
 
@@ -96,10 +96,7 @@ pub type StakeAmount = U256;
 pub type OperatorId = B256;
 
 pub fn operator_id_from_g1_pubkey(pubkey: &G1Point) -> OperatorId {
-    let pubkey: Bn254G1Affine = Bn254G1Affine::new(
-        Bn254Fq::from(BigInt::new(pubkey.x.into_limbs())),
-        Bn254Fq::from(BigInt::new(pubkey.y.into_limbs())),
-    );
+    let pubkey = g1_point_to_ark_point(&pubkey);
 
     let mut x_bytes: Vec<u8> = vec![0; pubkey.x.serialized_size(Compress::Yes)];
     pubkey.x.serialize_compressed(&mut x_bytes).unwrap();
@@ -115,20 +112,22 @@ pub fn operator_id_from_contract_g1_pubkey(pubkey: G1Point) -> OperatorId {
 }
 
 pub fn operator_id_from_key_pair(key_pair: &KeyPair) -> OperatorId {
-    let point = G1Point::new(key_pair.pub_key.x, key_pair.pub_key.y);
+    let point = g1_projective_to_g1_point(&key_pair.pub_key);
     operator_id_from_g1_pubkey(&point)
 }
 
 pub fn sign_hashed_to_curve_message(pt: G1Point, key_pair: &KeyPair) -> Signature {
-    let ark_pt: Bn254G1Affine = Bn254G1Affine::new(
-        Bn254Fq::from(BigInt::new(pt.x.into_limbs())),
-        Bn254Fq::from(BigInt::new(pt.y.into_limbs())),
-    );
+    // let ark_pt: Bn254G1Affine = Bn254G1Affine::new(
+    //     Bn254Fq::from(BigInt::new(pt.x.into_limbs())),
+    //     Bn254Fq::from(BigInt::new(pt.y.into_limbs())),
+    // );
+    let ark_pt = g1_point_to_ark_point(&pt);
     let sig = ark_pt.mul_bigint(&key_pair.priv_key.0);
-    let sig_point = G1Point {
-        x: U256::from_limbs(sig.x.0 .0),
-        y: U256::from_limbs(sig.y.0 .0),
-    };
+    let sig_point = g1_projective_to_g1_point(&sig);
+    // let sig_point = G1Point {
+    //     x: U256::from_limbs(sig.x.0 .0),
+    //     y: U256::from_limbs(sig.y.0 .0),
+    // };
     Signature {
         g1_point: sig_point,
     }

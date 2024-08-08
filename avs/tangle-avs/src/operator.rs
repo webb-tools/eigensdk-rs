@@ -65,18 +65,8 @@ pub enum OperatorError {
 #[allow(dead_code)]
 pub struct Operator<T: Config> {
     config: NodeConfig,
-    // eth_client: P,
-    // metrics_reg: Registry,
-    // metrics: Metrics,
     node_api: NodeApi,
     avs_registry_contract_manager: AvsRegistryContractManager<T>,
-    // tangle_validator_contract_manager: TangleValidatorContractManager<T>,
-    // avs_writer: AvsWriter<T, P>,
-    // avs_reader: AvsReader<T, P>,
-    // avs_subscriber: AvsRegistryChainSubscriber<T, P>,
-    // eigenlayer_reader: Arc<dyn ElReader<T, P>>,
-    // eigenlayer_writer: Arc<dyn ElWriter>,
-    // bls_keypair: KeyPair,
     operator_id: [u8; 32],
     operator_addr: Address,
     tangle_validator_service_manager_addr: Address,
@@ -183,27 +173,10 @@ impl<T: Config> Operator<T> {
         config: NodeConfig,
         eth_client_http: T::PH,
         eth_client_ws: T::PW,
-        // operator_info_service: I,
         signer: T::S,
     ) -> Result<Self, OperatorError> {
-        // let metrics_reg = Registry::new();
-        // let avs_and_eigen_metrics = Metrics::new(AVS_NAME, eigen_metrics, &metrics_reg);
-
         let node_api = NodeApi::new(AVS_NAME, SEM_VER, &config.node_api_ip_port_address);
 
-        // let eth_rpc_client = ProviderBuilder::default()
-        //     .with_recommended_fillers()
-        //     .on_http(
-        //         Url::parse(&config.eth_rpc_url)
-        //             .map_err(|e| OperatorError::HttpEthClientError(e.to_string()))?,
-        //     );
-        // let eth_ws_client = ProviderBuilder::default()
-        //     .with_recommended_fillers()
-        //     .on_ws(WsConnect::new(&config.eth_ws_url))
-        //     .await
-        //     .map_err(|e| AvsError::from(e))?;
-
-        log::warn!("About to read BLS key");
         let bls_key_password =
             std::env::var("OPERATOR_BLS_KEY_PASSWORD").unwrap_or_else(|_| "".to_string());
         let bls_keypair = KeyPair::read_private_key_from_file(
@@ -212,12 +185,6 @@ impl<T: Config> Operator<T> {
         )
         .map_err(OperatorError::from)?;
 
-        // let chain_id = eth_client_http
-        //     .get_chain_id()
-        //     .await
-        //     .map_err(|e| OperatorError::ChainIdError(e.to_string()))?;
-
-        log::warn!("About to read ECDSA key");
         let ecdsa_key_password =
             std::env::var("OPERATOR_ECDSA_KEY_PASSWORD").unwrap_or_else(|_| "".to_string());
         let ecdsa_secret_key = eigen_utils::crypto::ecdsa::read_key(
@@ -241,14 +208,6 @@ impl<T: Config> Operator<T> {
             signer: signer.clone(),
         };
 
-        // log::info!("Starting Delegation Manager Test");
-        // let test_delegation_manager = DelegationManager::new(setup_config.delegate_manager_addr, eth_client_http.clone());
-        // let test_addr = test_delegation_manager.address();
-        // log::info!("Delegation Manager Test Address: {:?}", test_addr);
-        // let test = test_delegation_manager.slasher().call().await.map(|a| a._0).unwrap();
-        // log::info!("Delegation Manager Test Slash Address: {:?}", test);
-
-        log::info!("About to build AVS Registry Contract Manager");
         let avs_registry_contract_manager = AvsRegistryContractManager::build(
             Address::from_str(&config.tangle_validator_service_manager_address).unwrap(),
             setup_config.registry_coordinator_addr,
@@ -261,39 +220,16 @@ impl<T: Config> Operator<T> {
         )
         .await?;
 
-        log::info!("About to get operator address");
         let operator_addr = Address::from_str(&config.operator_address)
             .map_err(|err| OperatorError::OperatorAddressError(err.to_string()))?;
-        log::info!("About to get operator id");
+
         let operator_id = avs_registry_contract_manager
             .get_operator_id(operator_addr)
             .await?;
 
-        log::info!("About to get service manager address");
         let tangle_validator_service_manager_addr =
             Address::from_str(&config.tangle_validator_service_manager_address)
                 .map_err(|err| OperatorError::ServiceManagerAddressError(err.to_string()))?;
-
-        // let avs_writer = AvsWriter::build(
-        //     &config.avs_registry_coordinator_address,
-        //     &config.operator_state_retriever_address,
-        //     eth_rpc_client.clone(),
-        // )
-        // .await?;
-        //
-        // let avs_reader = AvsReader::build(
-        //     &config.avs_registry_coordinator_address,
-        //     &config.operator_state_retriever_address,
-        //     eth_rpc_client.clone(),
-        // )
-        // .await?;
-        //
-        // let avs_subscriber = AvsSubscriber::build(
-        //     &config.avs_registry_coordinator_address,
-        //     &config.operator_state_retriever_address,
-        //     eth_ws_client.clone(),
-        // )
-        // .await?;
 
         // let tangle_validator_contract_manager = TangleValidatorContractManager::build(
         //     setup_config.registry_coordinator_addr,
@@ -310,11 +246,6 @@ impl<T: Config> Operator<T> {
         //         config.token_strategy_addr.parse()?,
         //     );
         // }
-
-        // let operator_id = sdk_clients
-        //     .avs_registry_chain_reader
-        //     .get_operator_id(&operator.operator_addr)?;
-        // operator.operator_id = operator_id;
 
         let mut salt = [0u8; 32];
         rand::thread_rng().fill(&mut salt);
@@ -333,10 +264,9 @@ impl<T: Config> Operator<T> {
                 expiry,
                 &bls_keypair,
                 alloy_primitives::Bytes::from(vec![0]),
-                "33125".to_string(),
+                "127.0.0.1:8545".to_string(),
             )
             .await;
-        log::info!("Register result: {:?}", register_result);
 
         let operator = Operator {
             config: config.clone(),
@@ -354,8 +284,6 @@ impl<T: Config> Operator<T> {
             bls_keypair.get_pub_key_g1(),
             bls_keypair.get_pub_key_g2(),
         );
-
-        log::info!("Operator Returning");
 
         Ok(operator)
     }

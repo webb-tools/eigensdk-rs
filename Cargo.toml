@@ -5,9 +5,10 @@ members = [
     "avs/tangle-avs",
     "aws",
     "contracts",
-    "utils",
     "eigensdk-rs",
     "fireblocks-client",
+    "test-utils",
+    "utils",
 ]
 
 [workspace.package]
@@ -23,6 +24,7 @@ aws-kms = { path = "./aws" }
 eigen-contracts = { path = "./contracts" }
 eigen-utils = { path = "./utils" }
 fireblocks-client = { path = "./fireblocks-client" }
+test-utils = { path = "./test-utils" }
 
 # AVS examples
 incredible-squaring-avs = { path = "./avs/incredible-squaring-avs" }
@@ -133,6 +135,8 @@ http-body-util = "0.1.1"
 
 anvil = { git = "https://github.com/foundry-rs/foundry.git" }
 foundry-common = { git = "https://github.com/foundry-rs/foundry.git" }
+alloy = "0.2.1"
+alloy-abi = "0.1.0"
 alloy-chains = "0.1.23"
 alloy-primitives = "0.7.7"
 alloy-dyn-abi = "0.7.7"

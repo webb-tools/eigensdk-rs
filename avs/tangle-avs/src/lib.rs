@@ -7,7 +7,7 @@ sol!(
     #[derive(Debug)]
     #[sol(rpc)]
     TangleValidatorTaskManager,
-    "contracts/out/TangleValidatorTaskManager.sol/TangleValidatorTaskManager.json"
+    "./contracts/out/TangleValidatorTaskManager.sol/TangleValidatorTaskManager.json"
 );
 
 sol!(
@@ -15,7 +15,7 @@ sol!(
     #[derive(Debug)]
     #[sol(rpc)]
     TangleValidatorServiceManager,
-    "contracts/out/TangleValidatorServiceManager.sol/TangleValidatorServiceManager.json"
+    "./contracts/out/TangleValidatorServiceManager.sol/TangleValidatorServiceManager.json"
 );
 
 sol!(
@@ -23,5 +23,5 @@ sol!(
     #[derive(Debug)]
     #[sol(rpc)]
     ITangleValidatorTaskManager,
-    "contracts/out/ITangleValidatorTaskManager.sol/ITangleValidatorTaskManager.json"
+    "./contracts/out/ITangleValidatorTaskManager.sol/ITangleValidatorTaskManager.json"
 );

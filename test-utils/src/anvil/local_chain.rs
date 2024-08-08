@@ -59,16 +59,6 @@ impl LocalEvmChain {
         self.chain_id
     }
 
-    // /// Returns typed EVM chain id
-    // pub fn typed_chain_id(&self) -> u64 {
-    //     TypedChainId::Evm(self.chain_id).chain_id()
-    // }
-
-    // pub fn contracts(&self) -> Vec<String> {
-    //     self.anvil_node_handle
-    //     vec![]
-    // }
-
     pub fn name(&self) -> &str {
         &self.name
     }
@@ -127,35 +117,3 @@ impl LocalEvmChain {
         anvil.spawn()
     }
 }
-
-// #[cfg(test)]
-// mod tests {
-//     use std::io::Error;
-//     use webb::evm::ethers::types::U256;
-//
-//     use super::*;
-//
-//     #[tokio::test]
-//     async fn should_load_old_state() -> Result<(), Error> {
-//         let state = tempfile::Builder::new()
-//             .prefix("evm-test-utils")
-//             .tempdir()?;
-//         assert!(state.path().is_dir());
-//
-//         let chain =
-//             LocalEvmChain::new_with_chain_state(5001, String::from("Hermes"), state.path(), None);
-//         let token = chain
-//             .deploy_token(String::from("Test"), String::from("TST"))
-//             .await?;
-//         let name = token.name().call().await?;
-//         assert_eq!(name, "Test");
-//         chain.shutdown();
-//         let chain =
-//             LocalEvmChain::new_with_chain_state(5001, String::from("Hermes"), state.path(), None);
-//         let token = ERC20PresetMinterPauserContract::new(token.address(), chain.client());
-//         let name = token.name().call().await?;
-//         assert_eq!(name, "Test");
-//         chain.shutdown();
-//         Ok(())
-//     }
-// }

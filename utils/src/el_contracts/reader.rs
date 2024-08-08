@@ -10,7 +10,6 @@ use eigen_contracts::AVSDirectory;
 use eigen_contracts::DelegationManager;
 use eigen_contracts::ISlasher;
 use eigen_contracts::IStrategy;
-
 use eigen_contracts::IERC20;
 
 use super::ElChainContractManager;
@@ -89,7 +88,7 @@ impl<T: Config> ElReader<T::TH, T::PH> for ElChainContractManager<T> {
             .map(|details| details._0)?;
         Ok(Operator {
             address: operator.address,
-            earnings_receiver_address: details.__deprecated_earningsReceiver,
+            earnings_receiver_address: details.earningsReceiver,
             staker_opt_out_window_blocks: details.stakerOptOutWindowBlocks,
             delegation_approver_address: details.delegationApprover,
             ..operator.clone()

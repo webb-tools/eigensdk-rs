@@ -6,5 +6,7 @@ edition = "2021"
 [dependencies]
 eigen-contracts = { workspace = true }
 eigen-utils = { workspace = true }
+tangle-avs = { workspace = true }
+incredible-squaring-avs = { workspace = true }
 fireblocks-client = { workspace = true }
 aws-kms = { workspace = true }

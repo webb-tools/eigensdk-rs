@@ -1,0 +1,92 @@
+name: Validate PR
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: rust-validation-${{ github.head_ref }}
+  cancel-in-progress: true
+
+env:
+  RUST_BACKTRACE: full
+  RUST_LOG: "info"
+  CARGO_TERM_COLOR: always
+
+jobs:
+  formatting:
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt
+
+      - name: Check Formatting
+        run: cargo fmt -- --check
+
+  linting:
+    timeout-minutes: 120
+    name: cargo clippy
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        package: [
+          eigensdk-rs
+        ]
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v2
+
+      - name: install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          cache-on-failure: "true"
+
+      - name: Run Clippy
+        run: cargo clippy --package ${{ matrix.package }} --tests -- -D warnings
+
+  testing:
+    timeout-minutes: 90
+    name: cargo test
+    if: false # temporarily disabled
+    runs-on: macos-14
+    strategy:
+      matrix:
+        package: [
+          eigensdk-rs,
+        ]
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v2
+
+      - name: install rust
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          toolchain: stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          cache-on-failure: "true"
+
+      - name: Set Relevant M1 env vars
+        run: |
+          export LIBRARY_PATH=$LIBRARY_PATH:/opt/homebrew/lib
+          export INCLUDE_PATH=$INCLUDE_PATH:/opt/homebrew/include
+
+      - name: install cargo-nextest
+        run: cargo install cargo-nextest --locked
+
+      - name: tests
+        run: cargo nextest run --release --nocapture --package ${{ matrix.package }}

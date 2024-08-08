@@ -3,9 +3,9 @@ pub mod subscriber;
 pub mod writer;
 
 use alloy_primitives::{Address, Bytes, U256};
+use alloy_provider::Provider;
 use alloy_rpc_types::{Log, TransactionReceipt};
 use alloy_sol_types::sol;
-
 use eigen_contracts::RegistryCoordinator;
 use eigen_utils::{
     crypto::bls::{G1Point, Signature},
@@ -20,7 +20,7 @@ sol!(
     #[derive(Debug)]
     #[sol(rpc)]
     IncredibleSquaringTaskManager,
-    "contracts/out/IncredibleSquaringTaskManager.sol/IncredibleSquaringTaskManager.json"
+    "./contracts/out/IncredibleSquaringTaskManager.sol/IncredibleSquaringTaskManager.json"
 );
 
 sol!(
@@ -28,7 +28,7 @@ sol!(
     #[derive(Debug)]
     #[sol(rpc)]
     IncredibleSquaringServiceManager,
-    "contracts/out/IncredibleSquaringServiceManager.sol/IncredibleSquaringServiceManager.json"
+    "./contracts/out/IncredibleSquaringServiceManager.sol/IncredibleSquaringServiceManager.json"
 );
 
 sol!(
@@ -36,7 +36,7 @@ sol!(
     #[derive(Debug)]
     #[sol(rpc)]
     Erc20Mock,
-    "contracts/out/ERC20Mock.sol/ERC20Mock.json"
+    "./contracts/out/ERC20Mock.sol/ERC20Mock.json"
 );
 
 #[derive(Debug, Clone)]
@@ -83,9 +83,11 @@ impl<T: Config> IncredibleSquaringContractManager<T> {
     ) -> Result<Self, AvsError> {
         let registry_coordinator =
             RegistryCoordinator::new(registry_coordinator_addr, eth_client_http.clone());
+
         let service_manager_addr = registry_coordinator.serviceManager().call().await?._0;
         let service_manager =
             IncredibleSquaringServiceManager::new(service_manager_addr, eth_client_http.clone());
+
         let task_manager_addr = service_manager
             .incredibleSquaringTaskManager()
             .call()

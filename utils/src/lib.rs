@@ -9,7 +9,6 @@ pub mod crypto;
 pub mod el_contracts;
 pub mod node_api;
 pub mod services;
-pub mod test_utils;
 pub mod types;
 pub mod utils;
 // pub mod curve_utils;

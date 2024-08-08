@@ -1,5 +1,13 @@
-use std::{collections::HashMap, convert::Infallible, sync::Arc, time::Duration};
-
+use crate::{
+    avs::{
+        writer::IncredibleSquaringWriter,
+        IncredibleSquaringContractManager,
+        IncredibleSquaringTaskManager::{self, Task, TaskResponse},
+        SetupConfig, SignedTaskResponse,
+    },
+    get_task_response_digest,
+    operator::OperatorError,
+};
 use alloy_primitives::U256;
 use alloy_sol_types::SolType;
 use eigen_utils::{
@@ -21,21 +29,11 @@ use hyper::{
     service::service_fn,
     Method, Request, Response, StatusCode,
 };
+use std::{collections::HashMap, convert::Infallible, sync::Arc, time::Duration};
 use tokio::{
     net::TcpListener,
     sync::{broadcast, RwLock},
     time::interval,
-};
-
-use crate::{
-    avs::{
-        writer::IncredibleSquaringWriter,
-        IncredibleSquaringContractManager,
-        IncredibleSquaringTaskManager::{self, Task, TaskResponse},
-        SetupConfig, SignedTaskResponse,
-    },
-    get_task_response_digest,
-    operator::OperatorError,
 };
 
 // Constants
@@ -45,8 +43,6 @@ pub const BLOCK_TIME_SECONDS: u64 = 12;
 pub const QUORUM_THRESHOLD_NUMERATOR: u8 = 100;
 pub const QUORUM_THRESHOLD_DENOMINATOR: u8 = 100;
 pub const QUERY_FILTER_FROM_BLOCK: u64 = 1;
-
-// We only use a single quorum (quorum 0) for incredible squaring
 pub const QUORUM_NUMBERS: &[QuorumNum] = &[QuorumNum(0)];
 
 #[derive(Clone)]
@@ -58,7 +54,6 @@ where
     server_ip_port_addr: String,
     incredible_squaring_contract_manager: IncredibleSquaringContractManager<T>,
     bls_aggregation_service: BlsAggregatorService<T, I>,
-    // bls_aggregation_responses: Receiver<BlsAggregationServiceResponse>,
     tasks: Arc<RwLock<HashMap<u32, Task>>>,
     task_responses: Arc<RwLock<HashMap<u32, HashMap<U256, TaskResponse>>>>,
 }
@@ -100,7 +95,6 @@ where
             server_ip_port_addr,
             incredible_squaring_contract_manager,
             bls_aggregation_service,
-            // bls_aggregation_responses: rx,
             tasks: Arc::new(RwLock::new(HashMap::new())),
             task_responses: Arc::new(RwLock::new(HashMap::new())),
         })
